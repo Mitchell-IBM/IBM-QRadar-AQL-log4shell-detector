@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<content>
+    <custom_function>
+        <namespace>exploitdetect</namespace>
+        <name>log4j</name>
+        <return_type>Boolean</return_type>
+        <parameter_types>String Number</parameter_types>
+        <execute_function_name>execute</execute_function_name>
+        <script_engine>javascript</script_engine>
+        <script>
+function execute(raw_payload, maximum_distance) {
+  if (!raw_payload) {
+    return false;
+  }
+  // Prepare the detection strings and plain strings
+  var DETECTION_STRINGS = ['${jndi:ldap:', '${jndi:rmi:', '${jndi:ldaps:', '${jndi:dns:', '${jndi:nis:', '${jndi:nds:', '${jndi:corba:', '${jndi:iiop:'];
+
+  var PLAIN_STRINGS = {
+    "https://gist.github.com/Neo23x0/e4c8b03ff8cdf1fa63b7d15db6e3860b#gistcomment-3991502": [
+      " header with value of BadAttributeValueException: "
+    ],
+    "https://gist.github.com/Neo23x0/e4c8b03ff8cdf1fa63b7d15db6e3860b#gistcomment-3991700": [
+      "at java.naming/com.sun.jndi.url.ldap.ldapURLContext.lookup(",
+      ".log4j.core.lookup.JndiLookup.lookup(JndiLookup"
+    ],
+    "https://github.com/Neo23x0/log4shell-detector/issues/5#issuecomment-991963675": [
+      '${base64:JHtqbmRp'
+    ],
+    "https://github.com/tangxiaofeng7/CVE-2021-44228-Apache-Log4j-Rce/issues/1": [
+      'Reference Class Name: foo'
+    ]
+  };
+
+  // Setup the detection pad (only needs to be once due to how this function is used)
+  var detection_pad = {};
+  var old_raw_payload = "";
+  for (var i = 0; i &lt; DETECTION_STRINGS.length; i++) {
+    var ds = DETECTION_STRINGS[i];
+    detection_pad[ds] = {};
+    detection_pad[ds] = {
+      "chars": ds.split(""),
+      "maximum_distance": maximum_distance,
+      "current_distance": 0,
+      "level": 0
+    };
+  }
+
+  // URL decodes the payloads
+  while (raw_payload.indexOf("%") != -1) {
+    old_raw_payload = raw_payload;
+    // Needs a custom URL decoder due to AQL JavaScript
+    raw_payload = urlDecodeForAQL(raw_payload);
+
+
+    if (raw_payload === old_raw_payload) break;
+  }
+
+  // Decode any use of base64 that includes the base64 tag
+  var decoded_raw_payload = raw_payload.replace(/\$\{base64:([^}]*?)}/gi, base64replace);
+
+  // Basic detection of plain strings. Immediately return true without having to step through characters
+  for (var key in PLAIN_STRINGS) {
+    for (var array_index in PLAIN_STRINGS[key]) {
+      var bad_string = PLAIN_STRINGS[key][array_index]
+      if (decoded_raw_payload.indexOf(bad_string) != -1 || old_raw_payload.indexOf(bad_string) != -1) {
+
+        return true;
+      }
+    }
+  }
+
+  // Setup for stepping through the payload character by character
+  decoded_raw_payload = decoded_raw_payload.toLowerCase();
+  var payload_chars = decoded_raw_payload.split("");
+  for (var char_index in payload_chars) {
+    var c = payload_chars[char_index];
+    for (var ds in detection_pad) {
+
+      if (c === detection_pad[ds]["chars"][detection_pad[ds]["level"]]) {
+        if (detection_pad[ds]["level"] == 1 &amp;&amp; !(detection_pad[ds]["current_distance"] == 1)) {
+          // Reset if the $ is not followed immediately by the {
+          detection_pad[ds]["current_distance"] = 0;
+          detection_pad[ds]["level"] = 0;
+        }
+        detection_pad[ds]["level"] += 1;
+        detection_pad[ds]["current_distance"] = 0;
+      }
+
+      if (detection_pad[ds]["level"] > 0) {
+        detection_pad[ds]["current_distance"] += 1;
+
+        // If max distance is exceeded, reset the detection pad and go again
+        if (detection_pad[ds]["current_distance"] > detection_pad[ds]["maximum_distance"]) {
+          detection_pad[ds]["current_distance"] = 0
+          detection_pad[ds]["level"] = 0
+        }
+      }
+
+      // Malicious string detected
+      if ((detection_pad[ds]["chars"]).length == detection_pad[ds]["level"]) {
+
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+function base64replace(match, p1) {
+  // Base64 decoding using an AQL Utilities function
+  try {
+    var unbase64payload = Utils.general.base64Decode(p1);
+    return unbase64payload;
+  } catch(err) {
+    // Catches occurrences of the regex used to detect the base64 tags - stops NullPointerExceptions
+    return match;
+  }
+}
+
+function urlDecodeForAQL(payload) {
+  // Custom implementation of URL decoder as the built-in JS decodeURIComponent() crashes AQL queries
+  var decode_object = {"%21":"!", "%22":'"', "%23":"#", "%24":"$", "%25":"%","%26":"&amp;","%27":"'","%28":"(","%29":")","%2a":"*","%2b":"+","%2c":",","%2d":"-","%2e":".","%2f":"/","%30":"0","%31":"1","%32":"2","%33":"3","%34":"4","%35":"5","%36":"6","%37":"7","%38":"8","%39":"9","%3a":":","%3b":";","%3c":"&lt;","%3d":"=","%3e":">","%3f":"?","%40":"@","%41":"A","%42":"B","%43":"C","%44":"D","%45":"E","%46":"F","%47":"G","%48":"H","%49":"I","%4a":"J","%4b":"K","%4c":"L","%4d":"M","%4e":"N","%4f":"O","%50":"P","%51":"Q","%52":"R","%53":"S","%54":"T","%55":"U","%56":"V","%57":"W","%58":"X","%59":"Y","%5a":"Z","%5b":"[","%5c":"\\","%5d":"]","%5e":"^","%5f":"_","%60":"`","%61":"a","%62":"b","%63":"c","%64":"d","%65":"e","%66":"f","%67":"g","%68":"h","%69":"i","%6a":"j","%6b":"k","%6c":"l","%6d":"m","%6e":"n","%6f":"o","%70":"p","%71":"q","%72":"r","%73":"s","%74":"t","%75":"u","%76":"v","%77":"w","%78":"x","%79":"y","%7a":"z","%7b":"{","%7c":"|","%7d":"}","%7e":"~"}
+
+
+  for (var decode_char in decode_object) {
+    // Need to account for lower and upper versions of the url encoded string.
+    // We cannot lower the string as that will change any base64 encodings in the payload
+    payload = payload.replace(decode_char, decode_object[decode_char]);
+    payload = payload.replace(decode_char.toUpperCase(), decode_object[decode_char]);
+  }
+
+  return payload;
+}
+
+        </script>
+        <username>admin</username>
+		<author>Mitchell Hale (IBM Security - UKSOC)</author>
+    </custom_function>
+</content>
