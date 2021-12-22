@@ -8,14 +8,14 @@ Please find further details on implementing this custom function here: https://c
 # Building An AQL Function
 In order to build your own AQL function, there are some useful resources to review to get you started on your journey of increasing your Advanced Search capabilities.
 
-Official Documentation
+**Official Documentation**
 - Custom AQL Functions Overview (Including Examples) [https://www.ibm.com/docs/en/qradar-common?topic=1-custom-aql-functions]
 - AQL Function XML Required Fields [https://www.ibm.com/docs/en/qradar-common?topic=functions-custom-aql-function-fields]
 - JavaScript Utilities Already Available [https://www.ibm.com/docs/en/qradar-common?topic=functions-custom-aql-function-utilities]
 
 
 
-Jose Bravo's AQL Function Video:
+**Jose Bravo's AQL Function Video:**
 - AQL Custom Functions (2021) & Log4J Example [SOON]
 - AQL Custom Functions (2016) [https://www.youtube.com/watch?v=6z8zjXw-xE4]
 
