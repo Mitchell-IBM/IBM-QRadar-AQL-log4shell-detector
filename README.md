@@ -13,6 +13,8 @@ Official Documentation
 - AQL Function XML Required Fields [https://www.ibm.com/docs/en/qradar-common?topic=functions-custom-aql-function-fields]
 - JavaScript Utilities Already Available [https://www.ibm.com/docs/en/qradar-common?topic=functions-custom-aql-function-utilities]
 
+
+
 Jose Bravo's AQL Function Video:
 - AQL Custom Functions (2021) & Log4J Example [SOON]
 - AQL Custom Functions (2016) [https://www.youtube.com/watch?v=6z8zjXw-xE4]
