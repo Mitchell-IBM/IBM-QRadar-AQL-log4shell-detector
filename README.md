@@ -3,6 +3,9 @@ IBM QRadar AQL function based on https://github.com/Neo23x0/log4shell-detector a
 
 Please find further details on implementing this custom function here: https://community.ibm.com/community/user/security/blogs/adam-frank/2021/12/13/detection-of-log4shell-using-qradar
 
+
+Release 2.0 has been removed due to a logic error that caused some payloads to be skipped. Release 2.1 (published 7 days ago) resolves this issue.
+
 **Note: QRadar will log the JavaScript into the SIEM. This may produce false positives at the initial point of uploading the AQL function on the strings in the code that are being monitored for. Please ignore these messages when they occur - you will likely see them as the QRadar IP being the source and destination addresses.**
 
 # Building An AQL Function
