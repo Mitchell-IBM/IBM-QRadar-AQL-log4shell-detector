@@ -19,6 +19,6 @@ In order to build your own AQL function, there are some useful resources to revi
 
 
 **Jose Bravo's AQL Function Video:**
-- AQL Custom Functions (2021) & Log4J Example [SOON]
+- AQL Custom Functions (2021) & Log4J Example [https://www.youtube.com/watch?v=eaLjiKJTSqA]
 - AQL Custom Functions (2016) [https://www.youtube.com/watch?v=6z8zjXw-xE4]
 
